@@ -26,19 +26,21 @@ public class HexComponent : MonoBehaviour {
     {
        if(StateManager.HexSelected == false)
         {
-            StateManager.HexSelected = true;
             StateManager.SelectedHex = Hex;
         }
         else
         {
-            StateManager.HexSelected = false;
+            Unit u = StateManager.SelectedUnit;
+            u.SetMoveQueue(Hex);
+            
             StateManager.SelectedHex = null;
+
         }
     }
 
     public void HighlightHex()
     {
-        GetComponentInChildren<MeshRenderer>().material.color = Color.yellow;
+        GetComponentInChildren<MeshRenderer>().material.color = Color.cyan;
     }
 
     public void UnHighlightHex()
@@ -49,22 +51,33 @@ public class HexComponent : MonoBehaviour {
     List<Hex> HighlightedHexes;
     private void OnMouseEnter()
     {
-        if(Hex != StateManager.SelectedHex & StateManager.HexSelected == true)
+        MovementPath();
+    }
+
+    public void MovementPath()
+    {
+        if (StateManager.HexSelected == true && (Hex != StateManager.SelectedHex ))
         {
-            if(HighlightedHexes == null)
+            if (Hex.TerrainType == Hex.TerrainTypeEnum.Mountain)
+            {
+                Debug.Log("Can't move into a mountain");
+                return;
+            }
+            if (HighlightedHexes == null)
             {
                 HighlightedHexes = new List<Hex>();
             }
-            foreach(Hex h in HexGrid.ShortestPathBetweenHexes(StateManager.SelectedHex, Hex))
-            {
-                HighlightedHexes.Add(h);
-                HexGrid.HexToGameObjectMap[h].GetComponentInChildren<MeshRenderer>().material.color = Color.yellow;
-            }
-        }
 
-        if (Hex.TerrainType != Hex.TerrainTypeEnum.Mountain & Hex.TerrainType != Hex.TerrainTypeEnum.Water)
-        {
-               // HighlightHex();
+
+            List<Hex> hexes = HexGrid.ShortestPathBetweenHexes(StateManager.SelectedHex, Hex);
+            if (hexes.Count > 0)
+            {
+                foreach (Hex h in hexes)
+                {
+                    HighlightedHexes.Add(h);
+                    HexGrid.HexToGameObjectMap[h].GetComponentInChildren<MeshRenderer>().material.color = Color.yellow;
+                }
+            }
         }
     }
     private void OnMouseExit()
@@ -75,9 +88,6 @@ public class HexComponent : MonoBehaviour {
             GameObject HCGO = HexGrid.HexToGameObjectMap[h];
             HCGO.GetComponentInChildren<MeshRenderer>().material.color = HCGO.GetComponent<HexComponent>().StartingColor;
         }
-        if (Hex.TerrainType != Hex.TerrainTypeEnum.Mountain & Hex.TerrainType != Hex.TerrainTypeEnum.Water)
-        {
-           // UnHighlightHex();
-        }
+       
     }
 }

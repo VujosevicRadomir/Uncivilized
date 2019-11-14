@@ -13,8 +13,8 @@ public class Unit {
 
     public Hex Hex { get; protected set; }
 
-    Queue<Hex> HexPath;
-
+    public Queue<Hex> MoveQueue;
+    
     public void SetHex(Hex hex)
     {
         if (Hex != null)
@@ -34,9 +34,12 @@ public class Unit {
     }
 
 
-    public void MoveUnit(Hex targetHex)
+    public void SetMoveQueue(Hex targetHex)
     {
-        SetHex(targetHex);
+        MoveQueue = new Queue<Hex>(HexGrid.ShortestPathBetweenHexes(Hex, targetHex));
+
+        MoveQueue.Dequeue();
+        
     }
 
     public void MoveUnit(int moveX, int moveY)
@@ -47,22 +50,44 @@ public class Unit {
 
     public void DoTurn()
     {
-        if (HexPath == null)
+        
+        HandleMovement();
+        ResetStats();
+    }
+
+    public void HandleMovement()
+    {
+        if (MoveQueue == null || MoveQueue.Count == 0)
         {
             return;
         }
-        Hex newHex = HexPath.Dequeue();
-        SetHex(newHex);
 
+        Hex current = MoveQueue.Peek();
+        if(movementRemaining >= current.CostToEnterTile() || movementRemaining == movement)
+        {
+            MoveToNextHex();
+            HandleMovement();
+        }
+        else
+        {
+            return;
+        }
+            
 
     }
 
-    public void SetHexPath(Hex [] hexPath)
+    public void MoveToNextHex()
     {
-        HexPath = new Queue<Hex>(hexPath);
-        
-        
+       
+        Hex h = MoveQueue.Dequeue();
+        SetHex(h);
+        movementRemaining -= h.CostToEnterTile();
     }
-    
+
+    public void ResetStats()
+    {
+        movementRemaining = movement;
+    }
    
+
 }

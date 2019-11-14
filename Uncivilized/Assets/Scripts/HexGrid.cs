@@ -11,7 +11,7 @@ public class HexGrid : MonoBehaviour {
         NumCols = 60;
         NumRows = 30;
         HexToGameObjectMap = new Dictionary<Hex, GameObject>();
-        hexes = new Hex[NumCols, NumRows];
+        hexes = new Hex[NumCols + 1, NumRows + 1];
         TileGraph = new int[NumCols, NumRows];
         GenerateMap();
         
@@ -60,9 +60,9 @@ public class HexGrid : MonoBehaviour {
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if(units != null)
+            if (units != null)
             {
-                foreach(Unit u in units)
+                foreach (Unit u in units)
                 {
                     u.DoTurn();
                 }
@@ -84,7 +84,13 @@ public class HexGrid : MonoBehaviour {
             col += NumCols;
         }
         col = col % NumCols;
-        return hexes[col, row];
+
+        if (row < 0 || row >= NumRows)
+        {
+            Debug.Log("Invalid row requested");
+        }
+
+        return hexes[col , row];
     }
 
     virtual public void GenerateMap()
@@ -197,7 +203,7 @@ public class HexGrid : MonoBehaviour {
                     else if (h.Moisture >= MoistureGrasslands)
                     {
                         h.TerrainFeature = Hex.TerrainFeatureEnum.None;
-                        if(h.TerrainType == Hex.TerrainTypeEnum.Plains)
+                        if(h.TerrainType == Hex.TerrainTypeEnum.PlainsHill)
                         {
                             h.TerrainType = Hex.TerrainTypeEnum.GrasllandHill;
                         }
@@ -286,34 +292,49 @@ public class HexGrid : MonoBehaviour {
                 }
             }
             frontier.Remove(current);
-            //Debug.Log(current.Q + " , " + current.R);
 
             if (current.Equals(goal))
             {
-                Debug.Log("Found goal");
                 break;
             }
 
             List<Hex> neighbours = HexGrid.GetHexNeighbours(current);
-
-            foreach(Hex next in neighbours)
+            
+            if(neighbours == null)
             {
+                continue;
+            }
+            
+            
+            foreach (Hex next in neighbours)
+            {
+
                 int newCost = costToReach[current] + next.CostToEnterTile();
+
                 if ((!costToReach.ContainsKey(next)) || (costToReach[next] > newCost))
                 {
                     costToReach[next] = newCost;
-                    frontier[next] = DistanceBetweenHexes(next, goal);
+                    frontier[next] = DistanceBetweenHexes(next, goal) * next.CostToEnterTile();
                     cameFrom[next] = current;
                 }
             }
-            
         }
+
+        if (!costToReach.ContainsKey(goal))
+        {
+            Debug.Log("Can't reach goal");
+            return result;
+        }
+
+        result.Add(goal);
         while(start != goal)
         {
+            
             result.Add(cameFrom[goal]);
             goal = cameFrom[goal];
         }
 
+        result.Reverse();
         return result;
     }
 
@@ -351,13 +372,13 @@ public class HexGrid : MonoBehaviour {
             result.Add(GetHexAt(hex.Q + 1, hex.R - 1));
         }
 
-        if(hex.R < NumRows)
+        if(hex.R + 1 < NumRows)
         {
-
             result.Add(GetHexAt(hex.Q, hex.R + 1));
             result.Add(GetHexAt(hex.Q - 1, hex.R + 1));
         }
-        
-        return result;
+
+
+        return result.Where(r => r.TerrainType != Hex.TerrainTypeEnum.Mountain).ToList();
     }
 }

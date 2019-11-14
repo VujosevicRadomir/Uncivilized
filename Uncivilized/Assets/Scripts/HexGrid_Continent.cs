@@ -11,7 +11,7 @@ public class HexGrid_Continent :HexGrid {
         int numContinents = 3;
         int continentSpacing = NumCols / numContinents;
 
-        Random.InitState(0);
+        //Random.InitState(0);
 
         for (int c = 0; c < numContinents; c++)
         {

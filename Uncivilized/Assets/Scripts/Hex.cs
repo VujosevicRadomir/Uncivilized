@@ -26,7 +26,7 @@ public class Hex {
     public TerrainTypeEnum TerrainType;
     public TerrainFeatureEnum TerrainFeature;
 
-    HashSet<Unit> units;
+    public HashSet<Unit> units;
 
     static readonly float WIDTH_MULTIPLIER = Mathf.Sqrt(3) / 2;
 
@@ -118,10 +118,16 @@ public class Hex {
             case TerrainTypeEnum.GrasllandHill:
                 return 2;
             case TerrainTypeEnum.Mountain:
-            case TerrainTypeEnum.Water:
                 return 1000;
+            case TerrainTypeEnum.Water:
+                return 10;
             default:
                 return 1;
         }
+    }
+
+    public override string ToString()
+    {
+         return "Hex : " + Q + " , " + R;
     }
 }
